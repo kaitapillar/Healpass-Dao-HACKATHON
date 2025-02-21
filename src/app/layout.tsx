@@ -1,41 +1,48 @@
-import type { Metadata } from 'next';
-import { NEXT_PUBLIC_URL } from '../config';
+"use client";
+import React from "react";
+import "../app/global.css";
+import { WagmiConfig, createConfig, http } from "wagmi";
+import { base } from "wagmi/chains";
+import { RainbowKitProvider, getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { coinbaseWallet } from "wagmi/connectors";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import './global.css';
-import '@coinbase/onchainkit/styles.css';
-import dynamic from 'next/dynamic';
+// Create a QueryClient instance
+const queryClient = new QueryClient();
 
-const OnchainProviders = dynamic(
-  () => import('src/components/OnchainProviders'),
-  {
-    ssr: false,
+// Setup Wagmi Config with Coinbase Smart Wallet
+const { connectors } = getDefaultWallets({
+  appName: "HealPass",
+  projectId: "1a51d12a-59d5-4180-83fc-f73f7fac64ed",
+  chains: [base],
+});
+
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: [
+    coinbaseWallet({
+      appName: "HealPass",
+      preference: "smartWalletOnly",
+    }),
+    ...connectors,
+  ],
+  chains: [base],
+  transports: {
+    [base.id]: http(),
   },
-);
+});
 
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1.0,
-};
-
-export const metadata: Metadata = {
-  title: 'Onchain Commerce Template',
-  description: 'Built with OnchainKit',
-  openGraph: {
-    title: 'Onchain Commerce Template',
-    description: 'Built with OnchainKit',
-    images: [`${NEXT_PUBLIC_URL}/vibes/vibes-19.png`],
-  },
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="flex items-center justify-center">
-        <OnchainProviders>{children}</OnchainProviders>
+      <body>
+        <QueryClientProvider client={queryClient}>
+          <WagmiConfig config={wagmiConfig}>
+            <RainbowKitProvider chains={[base]}>
+              {children}
+            </RainbowKitProvider>
+          </WagmiConfig>
+        </QueryClientProvider>
       </body>
     </html>
   );
