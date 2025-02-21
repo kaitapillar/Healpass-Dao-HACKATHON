@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useAccount, useConnect, useContractWrite, useReadContract, useDisconnect } from "wagmi"; // Add useDisconnect
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { coinbaseWallet } from "wagmi/connectors";
-import { parseEther } from "viem";
-import Link from "next/link"; // For navigation
+import { baseGoerli } from "wagmi/chains";
+import Link from "next/link";
 
 function MainComponent() {
   const defaultSessions = [
@@ -17,18 +17,16 @@ function MainComponent() {
       date_time: "2024-02-23T13:00:00",
       current_participants: 8,
       max_participants: 25,
-      specialty_focus: "energy_healing quantum alignment",
-      token_cost: 45, // Cost in HealPass Coin tokens
+      specialty_focus: "energy_healing quantum_alignment",
+      token_cost: 45,
     },
     {
       id: 2,
       category_name: "Functional & Longevity Medicine",
       instructor_name: "Dr. Alex Carter",
-      //%instructor_image: "/images/dr-moon.jpg", 
       instructor_image: "/images/dr-carter.jpg",
       title: "Detox & Cellular Repair 101",
-      description:
-        "Understand the science of detoxification and how to optimize cellular repair for longevity.",
+      description: "Understand the science of detoxification and how to optimize cellular repair for longevity.",
       date_time: "2024-02-25T17:00:00",
       current_participants: 15,
       max_participants: 30,
@@ -41,8 +39,7 @@ function MainComponent() {
       instructor_name: "Coach Ryan Blake",
       instructor_image: "/images/coach-blake.jpg",
       title: "Sleep Optimization for High Performers",
-      description:
-        "Master deep sleep cycles and wake up more refreshed and productive.",
+      description: "Master deep sleep cycles and wake up more refreshed and productive.",
       date_time: "2024-02-27T19:00:00",
       current_participants: 20,
       max_participants: 20,
@@ -55,8 +52,7 @@ function MainComponent() {
       instructor_name: "Dr. Emily Sage",
       instructor_image: "/images/dr-sage.jpg",
       title: "Emotional Resilience & Productivity",
-      description:
-        "Learn how emotional intelligence impacts productivity and how to master your emotions for success.",
+      description: "Learn how emotional intelligence impacts productivity and how to master your emotions for success.",
       date_time: "2024-02-28T18:00:00",
       current_participants: 10,
       max_participants: 15,
@@ -86,13 +82,13 @@ function MainComponent() {
       date_time: "2024-03-03T11:00:00",
       current_participants: 18,
       max_participants: 25,
-      specialty_focus: "energy balance bioenergetics",
-      token_cost: 20, // Cost in HealPass Coin tokens
+      specialty_focus: "energy balance biohacking",
+      token_cost: 20,
     },
   ];
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState(defaultSessions);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null); // Updated to allow string or null
   const [registrationLoading, setRegistrationLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [submitStatus, setSubmitStatus] = useState({
@@ -100,7 +96,7 @@ function MainComponent() {
     error: null,
     success: false,
   });
-  const [isRegistered, setIsRegistered] = useState(false); // Mock registration state
+  const [isRegistered, setIsRegistered] = useState(false);
   const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
@@ -114,9 +110,10 @@ function MainComponent() {
         });
         if (!response.ok) throw new Error("Failed to fetch sessions");
         const data = await response.json();
+        console.log("Fetched sessions:", data.classes);
         setSessions(data.classes?.length > 0 ? data.classes : defaultSessions);
       } catch (err) {
-        setError("Failed to load sessions");
+        setError("Failed to load sessions"); // Now compatible with string | null
         console.error(err);
         setSessions(defaultSessions);
       } finally {
@@ -136,20 +133,18 @@ function MainComponent() {
 
     setRegistrationLoading(true);
     try {
-      // Mock registration logic (no contract interaction)
       if (isRegistered) {
-        setError("You have already registered for this session.");
+        setError("You have already registered for this session."); // Updated to string
         return;
       }
 
-      // Simulate token approval and registration (no real blockchain call)
       console.log(`Mock registering for session ${sessionId} with ${tokenCost} DUMPY COINS`);
-      setIsRegistered(true); // Mark as registered for this session
-      setError(null);
+      setIsRegistered(true);
+      setError(null); // Clear error on success
 
-      window.location.href = `/classes/${sessionId}`; // Redirect to session details or confirmation
+      window.location.href = `/classes/${sessionId}`;
     } catch (err) {
-      setError("Registration failed: " + err.message);
+      setError("Registration failed: " + err.message); // Updated to string
       console.error("Registration error:", err);
     } finally {
       setRegistrationLoading(false);
@@ -186,7 +181,7 @@ function MainComponent() {
     } catch (err) {
       setSubmitStatus({
         loading: false,
-        error: err.message,
+        error: err.message, // Ensure error is a string
         success: false,
       });
     }
@@ -194,13 +189,13 @@ function MainComponent() {
 
   const handleLogout = () => {
     disconnect();
-    setIsRegistered(false); // Reset registration state on logout
+    setIsRegistered(false);
   };
 
   return (
     <div className="min-h-screen bg-[#000] text-[#C0C0C0] font-mono relative overflow-hidden">
       <div className="fixed inset-0">
-        <div className="absolute inset-0 bg-[#ffffff]/5"></div> {/* Match home/practitioner design */}
+        <div className="absolute inset-0 bg-[#ffffff]/5"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#000]/90"></div>
       </div>
 
