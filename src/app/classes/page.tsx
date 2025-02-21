@@ -100,58 +100,10 @@ function MainComponent() {
     error: null,
     success: false,
   });
+  const [isRegistered, setIsRegistered] = useState(false); // Mock registration state
   const { isConnected, address } = useAccount();
-  const { connect, connectors } = useConnect(); // Destructure connectors for debugging
-  const { disconnect } = useDisconnect(); // For logout functionality
-  const { write: approveTokens } = useContractWrite({
-    address: "YOUR_HEALPASS_COIN_CONTRACT_ADDRESS", // ERC-20 HealPass Coin contract address
-    abi: [
-      {
-        inputs: [
-          { name: "spender", type: "address" },
-          { name: "amount", type: "uint256" },
-        ],
-        name: "approve",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-      },
-    ],
-    functionName: "approve",
-  });
-  const { write: registerSession } = useContractWrite({
-    address: "YOUR_SESSION_CONTRACT_ADDRESS", // Contract for session registration
-    abi: [
-      {
-        inputs: [
-          { name: "sessionId", type: "uint256" },
-          { name: "tokenAmount", type: "uint256" },
-        ],
-        name: "registerForSession",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-      },
-    ],
-    functionName: "registerForSession",
-  });
-
-  // Read contract to check if user is registered for a session
-  const { data: isRegistered, refetch: refetchRegistration } = useReadContract({
-    address: "YOUR_SESSION_CONTRACT_ADDRESS",
-    abi: [
-      {
-        inputs: [{ name: "user", type: "address" }, { name: "sessionId", type: "uint256" }],
-        name: "isUserRegistered",
-        outputs: [{ type: "bool" }],
-        stateMutability: "view",
-        type: "function",
-      },
-    ],
-    functionName: "isUserRegistered",
-    args: address ? [address, BigInt(0)] : undefined, // Default to session ID 0; update as needed
-    enabled: !!address, // Only fetch if address exists
-  });
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -184,23 +136,16 @@ function MainComponent() {
 
     setRegistrationLoading(true);
     try {
-      // Check if already registered for this session
+      // Mock registration logic (no contract interaction)
       if (isRegistered) {
         setError("You have already registered for this session.");
         return;
       }
 
-      // Approve tokens for the session contract
-      console.log("Approving tokens...");
-      await approveTokens({
-        args: ["YOUR_SESSION_CONTRACT_ADDRESS", BigInt(tokenCost * 10 ** 18)], // Approve token cost in wei (assuming 18 decimals for HealPass Coin)
-      });
-
-      // Register for the session using the approved tokens
-      console.log("Registering for session...");
-      await registerSession({
-        args: [BigInt(sessionId), BigInt(tokenCost * 10 ** 18)], // Use token amount
-      });
+      // Simulate token approval and registration (no real blockchain call)
+      console.log(`Mock registering for session ${sessionId} with ${tokenCost} DUMPY COINS`);
+      setIsRegistered(true); // Mark as registered for this session
+      setError(null);
 
       window.location.href = `/classes/${sessionId}`; // Redirect to session details or confirmation
     } catch (err) {
@@ -208,7 +153,6 @@ function MainComponent() {
       console.error("Registration error:", err);
     } finally {
       setRegistrationLoading(false);
-      refetchRegistration(); // Refresh registration status
     }
   };
 
@@ -249,7 +193,8 @@ function MainComponent() {
   };
 
   const handleLogout = () => {
-    disconnect(); // Disconnect the wallet
+    disconnect();
+    setIsRegistered(false); // Reset registration state on logout
   };
 
   return (
@@ -260,12 +205,12 @@ function MainComponent() {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-16">
-        {/* Add Back Button at the top */}
         <div className="mb-8 text-left">
           <Link href="/" className="chrome-button px-6 py-2 tracking-[0.2em] text-sm">
             Back to Home
           </Link>
         </div>
+
         <section className="text-center mb-24">
           <h1 className="chrome-text text-6xl md:text-7xl tracking-[0.2em] mb-8">
             HEALPASS
@@ -376,7 +321,7 @@ function MainComponent() {
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="chrome-text">
-                        {session.token_cost} HEALPASS COINS
+                        {session.token_cost} DUMPY COINS
                       </div>
                       {isRegistered ? (
                         <div className="text-[#0f0] text-sm">Already Registered</div>
@@ -587,6 +532,35 @@ function MainComponent() {
           text-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
 
+        .chrome-button {
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(184, 184, 184, 0.1) 50%, rgba(255, 255, 255, 0.1) 100%);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+          color: #ffffff;
+          text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .chrome-button:hover {
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(184, 184, 184, 0.2) 50%, rgba(255, 255, 255, 0.2) 100%);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), 0 0 60px rgba(255, 255, 255, 0.1);
+        }
+
+        .chrome-button::after {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+          transform: rotate(45deg);
+          animation: chromePulse 4s linear infinite;
+        }
+
         @keyframes glow {
           0% { text-shadow: 0 0 10px rgba(0,255,0,0.3); }
           50% { text-shadow: 0 0 20px rgba(0,255,0,0.5); }
@@ -595,6 +569,12 @@ function MainComponent() {
 
         .text-[#0f0] {
           animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes chromePulse {
+          0% { filter: brightness(1) contrast(1); }
+          50% { filter: brightness(1.2) contrast(1.1); }
+          100% { filter: brightness(1) contrast(1); }
         }
       `}</style>
     </div>
